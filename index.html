@@ -6,38 +6,37 @@
     <title>Trading Wallet</title>
     <script src="https://www.paypal.com/sdk/js?client-id=ASJbZBJ7IRxlB15bZhS4KbFu1MbiE2aU_9AjPSXCLPdYV6Cops6hkAWRrnJjEZamWG7YRturVr8CPv_K&currency=EUR"></script>
     <style>
-        :root { --bg: #0b0e11; --card: #1e2329; --gold: #c1a400; --text: #eaeaea; --red: #ff4d4d; }
+        :root { --bg: #0b0e11; --card: #1e2329; --gold: #c1a400; --text: #eaeaea; --red: #ff4d4d; --green: #02c076; --gray: #848e9c; }
         body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; padding: 15px; box-sizing: border-box; }
         .card { background: var(--card); padding: 25px; border-radius: 20px; width: 100%; max-width: 400px; text-align: center; border: 1px solid #333; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
         input { width: 100%; padding: 12px; margin: 8px 0; border-radius: 8px; border: 1px solid #444; background: #2b3139; color: white; box-sizing: border-box; font-size: 16px; }
-        
-        /* RIMOZIONE TASTINI SU/GIÙ (SPINNERS) */
-        input::-webkit-outer-spin-button,
-        input::-webkit-inner-spin-button {
-            -webkit-appearance: none;
-            margin: 0;
-        }
-        input[type=number] {
-            -moz-appearance: textfield;
-        }
-
+        input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+        input[type=number] { -moz-appearance: textfield; }
         button { width: 100%; padding: 14px; background: var(--gold); border: none; border-radius: 8px; font-weight: bold; cursor: pointer; color: black; font-size: 15px; }
+        button:disabled { opacity: 0.5; cursor: not-allowed; }
         .hidden { display: none; }
         .section { background: #2b3139; padding: 15px; border-radius: 12px; margin-top: 15px; border: 1px solid #383f47; }
         label { display: block; text-align: left; font-size: 11px; color: var(--gold); font-weight: bold; margin-bottom: 5px; }
-        #balance { font-size: 38px; font-weight: bold; color: #02c076; margin: 15px 0; }
+        #balance { font-size: 38px; font-weight: bold; color: var(--green); margin: 15px 0; }
         .logout { cursor:pointer; color: var(--red); font-size: 12px; font-weight: bold; padding: 5px; }
-        .warning-text { font-size: 10px; color: #ffb700; margin: 8px 0; display: block; line-height: 1.3; }
+        .security-note { font-size: 11px; color: #ff9800; margin-top: 20px; line-height: 1.4; padding: 10px; border-radius: 8px; background: rgba(255, 152, 0, 0.1); border: 1px dashed rgba(255, 152, 0, 0.3); }
     </style>
 </head>
 <body>
 
 <div id="auth-ui" class="card">
-    <h2 id="title">Accedi</h2>
+    <h2 id="title">ACCEDI</h2>
     <input type="text" id="user" placeholder="Username">
     <input type="password" id="pass" placeholder="Password">
-    <button onclick="handleAuth()">CONTINUA</button>
-    <p onclick="toggleAuth()" style="font-size: 13px; color: var(--gold); cursor: pointer; margin-top: 15px;">Crea un account</p>
+    <button id="btn-auth" onclick="handleAuth()">ACCEDI</button>
+    
+    <p id="toggle-text" onclick="toggleAuth()" style="font-size: 13px; color: var(--gray); cursor: pointer; margin-top: 15px;">
+        Non hai un account? <b style="color: var(--gold)">Registrati</b>
+    </p>
+
+    <div class="security-note">
+        ⚠️ <b>ATTENZIONE:</b> Trattandosi di un sistema decentralizzato, se smarrisci lo <b>Username</b> o la <b>Password</b>, il recupero del conto e del saldo non sarà possibile in alcun modo. Conservali con cura.
+    </div>
 </div>
 
 <div id="dash-ui" class="card hidden">
@@ -45,8 +44,7 @@
         <div id="u-display" style="font-weight: bold; color: var(--gold);"></div>
         <span onclick="logout()" class="logout">ESCI</span>
     </div>
-
-    <div style="font-size: 11px; color: #848e9c; margin-top: 20px;">IL TUO SALDO</div>
+    <div style="font-size: 11px; color: var(--gray); margin-top: 20px;">IL TUO SALDO</div>
     <div id="balance">0,00 €</div>
 
     <div class="section">
@@ -56,16 +54,12 @@
     </div>
 
     <div class="section" style="border-color: #ff4d4d44;">
-        <label style="color: var(--red);">PRELEVA (€) (Trattenuta 5%)</label>
+        <label style="color: var(--red);">PRELEVA (€) (5%)</label>
         <input type="email" id="w-email" placeholder="Email PayPal">
         <input type="number" id="w-amount" placeholder="Importo" min="1.00">
-        
-        <span class="warning-text">⚠️ Assicurati di inserire l'email PayPal corretta: in caso di errore il denaro verrà perso definitivamente.</span>
-        
-        <button id="btn-withdraw" onclick="handleWithdraw()" style="background: var(--red); color: white; margin-top: 5px;">RICHIEDI PRELIEVO</button>
+        <button id="btn-withdraw" onclick="handleWithdraw()" style="background: var(--red); color: white; margin-top: 5px;">PRELEVA</button>
     </div>
-
-    <div id="status" style="font-size: 12px; color: #848e9c; margin-top: 15px;">Pronto</div>
+    <div id="status" style="font-size: 12px; color: var(--gray); margin-top: 15px;">Pronto</div>
 </div>
 
 <script type="module">
@@ -80,56 +74,43 @@
 
     window.toggleAuth = () => { 
         mode = mode === "LOGIN" ? "SIGNUP" : "LOGIN"; 
-        document.getElementById("title").innerText = mode; 
-    };
-
-    window.logout = () => {
-        if (currentUser) off(ref(db, `utenti/${currentUser}/saldo`));
-        currentUser = null;
-        document.getElementById("dash-ui").classList.add("hidden");
-        document.getElementById("auth-ui").classList.remove("hidden");
-        document.getElementById("paypal-button-container").innerHTML = "";
+        document.getElementById("title").innerText = mode === "LOGIN" ? "ACCEDI" : "REGISTRATI";
+        document.getElementById("btn-auth").innerText = mode === "LOGIN" ? "ACCEDI" : "CREA ACCOUNT";
+        document.getElementById("toggle-text").innerHTML = mode === "LOGIN" ? 
+            'Non hai un account? <b style="color: var(--gold)">Registrati</b>' : 
+            'Hai già un account? <b style="color: var(--gold)">Accedi</b>';
     };
 
     window.handleAuth = () => {
         const u = document.getElementById("user").value.trim().toLowerCase();
         const p = document.getElementById("pass").value;
+        const btn = document.getElementById("btn-auth");
         if(!u || !p) return alert("Inserisci i dati");
+        btn.innerText = "ATTENDI...";
+        btn.disabled = true;
 
         const authRef = push(ref(db, 'auth_requests'), { Username: u, Password: p, Type: mode, Stato: "PENDING" });
+        
+        const timeout = setTimeout(() => {
+            off(authRef);
+            btn.disabled = false;
+            btn.innerText = mode === "LOGIN" ? "ACCEDI" : "CREA ACCOUNT";
+            alert("Il server non risponde. Riprova.");
+        }, 12000);
+
         onValue(authRef, snap => {
             const data = snap.val();
             if(data?.Stato === "SUCCESS") { 
+                clearTimeout(timeout);
                 currentUser = u; 
                 off(authRef);
                 showDash(); 
             } else if(data?.Stato === "FAIL") {
+                clearTimeout(timeout);
                 alert("Errore: " + data.Messaggio);
+                btn.disabled = false;
+                btn.innerText = mode === "LOGIN" ? "ACCEDI" : "CREA ACCOUNT";
                 off(authRef);
-            }
-        });
-    };
-
-    window.handleWithdraw = () => {
-        const email = document.getElementById("w-email").value;
-        const val = parseFloat(document.getElementById("w-amount").value);
-        if(!email.includes("@") || isNaN(val) || val < 1) return alert("Dati prelievo non validi");
-
-        const netto = (val * 0.95).toFixed(2);
-        if(!confirm(`Confermi il prelievo?\nVerranno scalati ${val}€ dal saldo.\nRiceverai ${netto}€ sul conto PayPal.\n\nIMPORTANTE: Controlla che l'email ${email} sia corretta.`)) return;
-
-        document.getElementById("status").innerText = "Invio richiesta prelievo...";
-        const wRef = push(ref(db, 'prelievi'), { UserId: currentUser, EmailPayPal: email, Importo: val, Stato: "PENDING" });
-        
-        onValue(wRef, snap => {
-            const res = snap.val();
-            if(res?.Stato === "SUCCESS") { 
-                alert("Prelievo completato!"); 
-                document.getElementById("w-amount").value = "";
-                off(wRef);
-            } else if(res?.Stato === "ERROR") {
-                alert("Errore: " + res.Messaggio);
-                off(wRef);
             }
         });
     };
@@ -144,9 +125,11 @@
             document.getElementById("balance").innerText = saldo.toLocaleString('it-IT', {style:'currency', currency:'EUR'});
         });
 
+        document.getElementById("paypal-button-container").innerHTML = "";
         paypal.Buttons({
             createOrder: () => {
                 const val = parseFloat(document.getElementById("amount").value);
+                if(isNaN(val) || val < 1) { alert("Importo non valido"); return; }
                 const pRef = push(ref(db, 'pagamenti'), { Importo: val, UserId: currentUser, Stato: "PENDING" });
                 currentPayKey = pRef.key;
                 return new Promise((resolve) => {
@@ -159,6 +142,21 @@
             onApprove: () => update(ref(db, 'pagamenti/' + currentPayKey), { Stato: "TO_CAPTURE" })
         }).render('#paypal-button-container');
     }
+
+    window.handleWithdraw = () => {
+        const email = document.getElementById("w-email").value;
+        const val = parseFloat(document.getElementById("w-amount").value);
+        if(!email.includes("@") || isNaN(val) || val < 1) return alert("Dati non validi");
+        const wRef = push(ref(db, 'prelievi'), { UserId: currentUser, EmailPayPal: email, Importo: val, Stato: "PENDING" });
+        document.getElementById("status").innerText = "Richiesta inviata...";
+        onValue(wRef, snap => {
+            const res = snap.val();
+            if(res?.Stato === "SUCCESS") { alert("Prelievo OK"); off(wRef); document.getElementById("status").innerText = "Pronto"; }
+            else if(res?.Stato === "ERROR") { alert(res.Messaggio); off(wRef); }
+        });
+    };
+
+    window.logout = () => location.reload();
 </script>
 </body>
 </html>
