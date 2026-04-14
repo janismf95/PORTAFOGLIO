@@ -10,12 +10,24 @@
         body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; padding: 15px; box-sizing: border-box; }
         .card { background: var(--card); padding: 25px; border-radius: 20px; width: 100%; max-width: 400px; text-align: center; border: 1px solid #333; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
         input { width: 100%; padding: 12px; margin: 8px 0; border-radius: 8px; border: 1px solid #444; background: #2b3139; color: white; box-sizing: border-box; font-size: 16px; }
+        
+        /* RIMOZIONE TASTINI SU/GIÙ (SPINNERS) */
+        input::-webkit-outer-spin-button,
+        input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        input[type=number] {
+            -moz-appearance: textfield;
+        }
+
         button { width: 100%; padding: 14px; background: var(--gold); border: none; border-radius: 8px; font-weight: bold; cursor: pointer; color: black; font-size: 15px; }
         .hidden { display: none; }
         .section { background: #2b3139; padding: 15px; border-radius: 12px; margin-top: 15px; border: 1px solid #383f47; }
         label { display: block; text-align: left; font-size: 11px; color: var(--gold); font-weight: bold; margin-bottom: 5px; }
         #balance { font-size: 38px; font-weight: bold; color: #02c076; margin: 15px 0; }
         .logout { cursor:pointer; color: var(--red); font-size: 12px; font-weight: bold; padding: 5px; }
+        .warning-text { font-size: 10px; color: #ffb700; margin: 8px 0; display: block; line-height: 1.3; }
     </style>
 </head>
 <body>
@@ -44,9 +56,12 @@
     </div>
 
     <div class="section" style="border-color: #ff4d4d44;">
-        <label style="color: var(--red);">PRELEVA (Comm. 5%)</label>
+        <label style="color: var(--red);">PRELEVA (€) (Trattenuta 5%)</label>
         <input type="email" id="w-email" placeholder="Email PayPal">
-        <input type="number" id="w-amount" placeholder="Importo da scalare" min="1.00">
+        <input type="number" id="w-amount" placeholder="Importo" min="1.00">
+        
+        <span class="warning-text">⚠️ Assicurati di inserire l'email PayPal corretta: in caso di errore il denaro verrà perso definitivamente.</span>
+        
         <button id="btn-withdraw" onclick="handleWithdraw()" style="background: var(--red); color: white; margin-top: 5px;">RICHIEDI PRELIEVO</button>
     </div>
 
@@ -95,18 +110,13 @@
         });
     };
 
-    // --- LOGICA PRELIEVO CON AVVISO COMMISSIONE ---
     window.handleWithdraw = () => {
         const email = document.getElementById("w-email").value;
         const val = parseFloat(document.getElementById("w-amount").value);
-        
-        if(!email.includes("@") || isNaN(val) || val < 1) return alert("Dati non validi");
+        if(!email.includes("@") || isNaN(val) || val < 1) return alert("Dati prelievo non validi");
 
-        // Calcolo anteprima commissione (5%)
-        const comm = (val * 0.05).toFixed(2);
-        const netto = (val - comm).toFixed(2);
-
-        if(!confirm(`Confermi il prelievo?\nScalati dal saldo: ${val}€\nRicevuti su PayPal: ${netto}€\nCommissione: ${comm}€`)) return;
+        const netto = (val * 0.95).toFixed(2);
+        if(!confirm(`Confermi il prelievo?\nVerranno scalati ${val}€ dal saldo.\nRiceverai ${netto}€ sul conto PayPal.\n\nIMPORTANTE: Controlla che l'email ${email} sia corretta.`)) return;
 
         document.getElementById("status").innerText = "Invio richiesta prelievo...";
         const wRef = push(ref(db, 'prelievi'), { UserId: currentUser, EmailPayPal: email, Importo: val, Stato: "PENDING" });
@@ -114,7 +124,7 @@
         onValue(wRef, snap => {
             const res = snap.val();
             if(res?.Stato === "SUCCESS") { 
-                alert("Prelievo inviato con successo!"); 
+                alert("Prelievo completato!"); 
                 document.getElementById("w-amount").value = "";
                 off(wRef);
             } else if(res?.Stato === "ERROR") {
@@ -146,8 +156,7 @@
                     });
                 });
             },
-            onApprove: () => update(ref(db, 'pagamenti/' + currentPayKey), { Stato: "TO_CAPTURE" }),
-            onCancel: () => document.getElementById("status").innerText = "Annullato."
+            onApprove: () => update(ref(db, 'pagamenti/' + currentPayKey), { Stato: "TO_CAPTURE" })
         }).render('#paypal-button-container');
     }
 </script>
