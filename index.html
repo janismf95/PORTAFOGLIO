@@ -19,6 +19,7 @@
         label { display: block; text-align: left; font-size: 11px; color: var(--gold); font-weight: bold; margin-bottom: 5px; }
         #balance { font-size: 38px; font-weight: bold; color: var(--green); margin: 15px 0; }
         .logout { cursor:pointer; color: var(--red); font-size: 12px; font-weight: bold; padding: 5px; }
+        .warning-text { font-size: 10px; color: #ffb700; margin: 8px 0; display: block; text-align: left; line-height: 1.3; }
         .security-note { font-size: 11px; color: #ff9800; margin-top: 20px; line-height: 1.4; padding: 10px; border-radius: 8px; background: rgba(255, 152, 0, 0.1); border: 1px dashed rgba(255, 152, 0, 0.3); }
     </style>
 </head>
@@ -29,13 +30,11 @@
     <input type="text" id="user" placeholder="Username">
     <input type="password" id="pass" placeholder="Password">
     <button id="btn-auth" onclick="handleAuth()">ACCEDI</button>
-    
     <p id="toggle-text" onclick="toggleAuth()" style="font-size: 13px; color: var(--gray); cursor: pointer; margin-top: 15px;">
         Non hai un account? <b style="color: var(--gold)">Registrati</b>
     </p>
-
     <div class="security-note">
-        ⚠️ <b>ATTENZIONE:</b> Trattandosi di un sistema decentralizzato, se smarrisci lo <b>Username</b> o la <b>Password</b>, il recupero del conto e del saldo non sarà possibile in alcun modo. Conservali con cura.
+        ⚠️ <b>ATTENZIONE:</b> Se smarrisci <b>Username</b> o <b>Password</b>, il recupero del conto e del saldo non sarà possibile. Conservali con cura.
     </div>
 </div>
 
@@ -57,6 +56,9 @@
         <label style="color: var(--red);">PRELEVA (€) (5%)</label>
         <input type="email" id="w-email" placeholder="Email PayPal">
         <input type="number" id="w-amount" placeholder="Importo" min="1.00">
+        
+        <span class="warning-text">⚠️ Assicurati di inserire l'email PayPal corretta: in caso di errore il denaro verrà perso definitivamente.</span>
+        
         <button id="btn-withdraw" onclick="handleWithdraw()" style="background: var(--red); color: white; margin-top: 5px;">PRELEVA</button>
     </div>
     <div id="status" style="font-size: 12px; color: var(--gray); margin-top: 15px;">Pronto</div>
@@ -95,7 +97,7 @@
             off(authRef);
             btn.disabled = false;
             btn.innerText = mode === "LOGIN" ? "ACCEDI" : "CREA ACCOUNT";
-            alert("Il server non risponde. Riprova.");
+            alert("Il server non risponde.");
         }, 12000);
 
         onValue(authRef, snap => {
@@ -147,8 +149,13 @@
         const email = document.getElementById("w-email").value;
         const val = parseFloat(document.getElementById("w-amount").value);
         if(!email.includes("@") || isNaN(val) || val < 1) return alert("Dati non validi");
+        
+        const netto = (val * 0.95).toFixed(2);
+        if(!confirm(`Confermi il prelievo?\nRiceverai ${netto}€ su PayPal.\nEmail: ${email}`)) return;
+
         const wRef = push(ref(db, 'prelievi'), { UserId: currentUser, EmailPayPal: email, Importo: val, Stato: "PENDING" });
         document.getElementById("status").innerText = "Richiesta inviata...";
+        
         onValue(wRef, snap => {
             const res = snap.val();
             if(res?.Stato === "SUCCESS") { alert("Prelievo OK"); off(wRef); document.getElementById("status").innerText = "Pronto"; }
