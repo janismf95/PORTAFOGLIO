@@ -8,19 +8,41 @@
     <style>
         :root { --bg: #0b0e11; --card: #1e2329; --gold: #c1a400; --text: #eaeaea; --red: #ff4d4d; --green: #02c076; --gray: #848e9c; }
         body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; padding: 15px; box-sizing: border-box; }
+        
         .card { background: var(--card); padding: 25px; border-radius: 20px; width: 100%; max-width: 400px; text-align: center; border: 1px solid #333; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-        input { width: 100%; padding: 12px; margin: 8px 0; border-radius: 8px; border: 1px solid #444; background: #2b3139; color: white; box-sizing: border-box; font-size: 16px; }
-        input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
-        input[type=number] { -moz-appearance: textfield; }
-        button { width: 100%; padding: 14px; background: var(--gold); border: none; border-radius: 8px; font-weight: bold; cursor: pointer; color: black; font-size: 15px; }
+        
+        input { width: 100%; padding: 12px; margin: 8px 0; border-radius: 8px; border: 1px solid #444; background: #2b3139; color: white; box-sizing: border-box; font-size: 16px; transition: border 0.2s; }
+        input:focus { border-color: var(--gold); outline: none; }
+        
+        /* RIMOZIONE SPINNER INPUT NUMERICI (FRECCE UP/DOWN) */
+        /* Chrome, Safari, Edge, Opera */
+        input::-webkit-outer-spin-button,
+        input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        /* Firefox e Standard */
+        input[type=number] {
+            -moz-appearance: textfield;
+            appearance: textfield;
+        }
+
+        button { width: 100%; padding: 14px; background: var(--gold); border: none; border-radius: 8px; font-weight: bold; cursor: pointer; color: black; font-size: 15px; transition: opacity 0.2s; }
         button:disabled { opacity: 0.5; cursor: not-allowed; }
+        
         .hidden { display: none; }
         .section { background: #2b3139; padding: 15px; border-radius: 12px; margin-top: 15px; border: 1px solid #383f47; }
         label { display: block; text-align: left; font-size: 11px; color: var(--gold); font-weight: bold; margin-bottom: 5px; }
+        
         #balance { font-size: 38px; font-weight: bold; color: var(--green); margin: 15px 0; }
         .logout { cursor:pointer; color: var(--red); font-size: 12px; font-weight: bold; padding: 5px; }
+        
         .warning-text { font-size: 10px; color: #ffb700; margin: 8px 0; display: block; text-align: left; line-height: 1.3; }
         .security-note { font-size: 11px; color: #ff9800; margin-top: 20px; line-height: 1.4; padding: 10px; border-radius: 8px; background: rgba(255, 152, 0, 0.1); border: 1px dashed rgba(255, 152, 0, 0.3); }
+        
+        #toggle-text { font-size: 13px; color: var(--gray); cursor: pointer; margin-top: 15px; }
+        #toggle-text b { color: var(--gold); }
     </style>
 </head>
 <body>
@@ -30,11 +52,13 @@
     <input type="text" id="user" placeholder="Username">
     <input type="password" id="pass" placeholder="Password">
     <button id="btn-auth" onclick="handleAuth()">ACCEDI</button>
-    <p id="toggle-text" onclick="toggleAuth()" style="font-size: 13px; color: var(--gray); cursor: pointer; margin-top: 15px;">
-        Non hai un account? <b style="color: var(--gold)">Registrati</b>
+    
+    <p id="toggle-text" onclick="toggleAuth()">
+        Non hai un account? <b>Registrati</b>
     </p>
+
     <div class="security-note">
-        ⚠️ <b>ATTENZIONE:</b> Se smarrisci <b>Username</b> o <b>Password</b>, il recupero del conto e del saldo non sarà possibile. Conservali con cura.
+        ⚠️ <b>SICUREZZA:</b> Se smarrisci <b>Username</b> o <b>Password</b>, il recupero del conto e del saldo non sarà possibile. Conservali con cura.
     </div>
 </div>
 
@@ -43,24 +67,26 @@
         <div id="u-display" style="font-weight: bold; color: var(--gold);"></div>
         <span onclick="logout()" class="logout">ESCI</span>
     </div>
+    
     <div style="font-size: 11px; color: var(--gray); margin-top: 20px;">IL TUO SALDO</div>
     <div id="balance">0,00 €</div>
 
     <div class="section">
         <label>DEPOSITA (€)</label>
-        <input type="number" id="amount" value="10.00" min="1.00">
+        <input type="number" id="amount" value="10.00" min="1.00" step="0.01">
         <div id="paypal-button-container" style="margin-top: 10px;"></div>
     </div>
 
-    <div class="section" style="border-color: #ff4d4d44;">
-        <label style="color: var(--red);">PRELEVA (€) (5%)</label>
+    <div class="section" style="border-color: rgba(255, 77, 77, 0.3);">
+        <label style="color: var(--red);">PRELEVA (€) (Commissione 5%)</label>
         <input type="email" id="w-email" placeholder="Email PayPal">
-        <input type="number" id="w-amount" placeholder="Importo" min="1.00">
+        <input type="number" id="w-amount" placeholder="Importo" min="1.00" step="0.01">
         
         <span class="warning-text">⚠️ Assicurati di inserire l'email PayPal corretta: in caso di errore il denaro verrà perso definitivamente.</span>
         
-        <button id="btn-withdraw" onclick="handleWithdraw()" style="background: var(--red); color: white; margin-top: 5px;">PRELEVA</button>
+        <button id="btn-withdraw" onclick="handleWithdraw()" style="background: var(--red); color: white; margin-top: 5px;">RICHIEDI PRELIEVO</button>
     </div>
+    
     <div id="status" style="font-size: 12px; color: var(--gray); margin-top: 15px;">Pronto</div>
 </div>
 
@@ -79,15 +105,17 @@
         document.getElementById("title").innerText = mode === "LOGIN" ? "ACCEDI" : "REGISTRATI";
         document.getElementById("btn-auth").innerText = mode === "LOGIN" ? "ACCEDI" : "CREA ACCOUNT";
         document.getElementById("toggle-text").innerHTML = mode === "LOGIN" ? 
-            'Non hai un account? <b style="color: var(--gold)">Registrati</b>' : 
-            'Hai già un account? <b style="color: var(--gold)">Accedi</b>';
+            'Non hai un account? <b>Registrati</b>' : 
+            'Hai già un account? <b>Accedi</b>';
     };
 
     window.handleAuth = () => {
         const u = document.getElementById("user").value.trim().toLowerCase();
         const p = document.getElementById("pass").value;
         const btn = document.getElementById("btn-auth");
-        if(!u || !p) return alert("Inserisci i dati");
+
+        if(!u || !p) return alert("Inserisci Username e Password");
+
         btn.innerText = "ATTENDI...";
         btn.disabled = true;
 
@@ -97,7 +125,7 @@
             off(authRef);
             btn.disabled = false;
             btn.innerText = mode === "LOGIN" ? "ACCEDI" : "CREA ACCOUNT";
-            alert("Il server non risponde.");
+            alert("Il server non risponde. Verifica la connessione.");
         }, 12000);
 
         onValue(authRef, snap => {
@@ -109,7 +137,7 @@
                 showDash(); 
             } else if(data?.Stato === "FAIL") {
                 clearTimeout(timeout);
-                alert("Errore: " + data.Messaggio);
+                alert("Errore: " + (data.Messaggio || "Dati non validi"));
                 btn.disabled = false;
                 btn.innerText = mode === "LOGIN" ? "ACCEDI" : "CREA ACCOUNT";
                 off(authRef);
@@ -131,9 +159,11 @@
         paypal.Buttons({
             createOrder: () => {
                 const val = parseFloat(document.getElementById("amount").value);
-                if(isNaN(val) || val < 1) { alert("Importo non valido"); return; }
+                if(isNaN(val) || val < 1) { alert("Inserisci un importo valido"); return; }
+                
                 const pRef = push(ref(db, 'pagamenti'), { Importo: val, UserId: currentUser, Stato: "PENDING" });
                 currentPayKey = pRef.key;
+
                 return new Promise((resolve) => {
                     onValue(pRef, snap => {
                         const data = snap.val();
@@ -141,25 +171,37 @@
                     });
                 });
             },
-            onApprove: () => update(ref(db, 'pagamenti/' + currentPayKey), { Stato: "TO_CAPTURE" })
+            onApprove: () => {
+                update(ref(db, 'pagamenti/' + currentPayKey), { Stato: "TO_CAPTURE" });
+                alert("Pagamento inviato! Il saldo si aggiornerà a breve.");
+            }
         }).render('#paypal-button-container');
     }
 
     window.handleWithdraw = () => {
-        const email = document.getElementById("w-email").value;
+        const email = document.getElementById("w-email").value.trim();
         const val = parseFloat(document.getElementById("w-amount").value);
-        if(!email.includes("@") || isNaN(val) || val < 1) return alert("Dati non validi");
+
+        if(!email.includes("@") || isNaN(val) || val < 1) return alert("Dati prelievo non validi");
         
         const netto = (val * 0.95).toFixed(2);
-        if(!confirm(`Confermi il prelievo?\nRiceverai ${netto}€ su PayPal.\nEmail: ${email}`)) return;
+        if(!confirm(`Confermi il prelievo di ${val}€?\n\nRiceverai ${netto}€ (netto commissioni) su:\n${email}`)) return;
 
+        document.getElementById("status").innerText = "Invio richiesta...";
         const wRef = push(ref(db, 'prelievi'), { UserId: currentUser, EmailPayPal: email, Importo: val, Stato: "PENDING" });
-        document.getElementById("status").innerText = "Richiesta inviata...";
         
         onValue(wRef, snap => {
             const res = snap.val();
-            if(res?.Stato === "SUCCESS") { alert("Prelievo OK"); off(wRef); document.getElementById("status").innerText = "Pronto"; }
-            else if(res?.Stato === "ERROR") { alert(res.Messaggio); off(wRef); }
+            if(res?.Stato === "SUCCESS") { 
+                alert("Richiesta completata con successo!"); 
+                off(wRef); 
+                document.getElementById("status").innerText = "Pronto";
+                document.getElementById("w-amount").value = "";
+            } else if(res?.Stato === "ERROR") { 
+                alert("Errore: " + res.Messaggio); 
+                off(wRef); 
+                document.getElementById("status").innerText = "Errore";
+            }
         });
     };
 
